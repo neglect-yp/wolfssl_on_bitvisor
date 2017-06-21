@@ -8,6 +8,9 @@ enum echo_command {
 	ECHO_CMD_CLIENT_CONNECT = 0,
 	ECHO_CMD_CLIENT_SEND = 1,
 	ECHO_CMD_SERVER_START = 2,
+	SSL_ECHO_CMD_CLIENT_CONNECT = 3,
+	SSL_ECHO_CMD_CLIENT_SEND = 4,
+	SSL_ECHO_CMD_SERVER_START = 5,
 };
 
 struct arg {
@@ -84,6 +87,15 @@ echoctl_sub (unsigned long (*array)[3], int len)
 		} else {
 			ret = -1;
 		}
+		break;
+	case SSL_ECHO_CMD_CLIENT_CONNECT:
+		ret = 0;
+		break;
+	case SSL_ECHO_CMD_CLIENT_SEND:
+		ret = 0;
+		break;
+	case SSL_ECHO_CMD_SERVER_START:
+		ret = 0;
 		break;
 	default:
 		ret = -1;
