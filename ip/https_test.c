@@ -6,9 +6,13 @@
 #include <core/process.h>
 #include <core/initfunc.h>
 #include <core/printf.h>
+#include <core/thread.h>
 
 #include "tcpip.h"
+#include "bios_time.h"
 #include "https_test.h"
+
+#define HTTPS_TIMEOUT_SEC 5
 
 int https_test(int m, int i)
 {
@@ -26,6 +30,14 @@ int https_test(int m, int i)
         tcpip_begin(tcp_client_init, a);
     } else {
         return -1;
+    }
+
+    time_t start = time(0);
+    while (!is_connect_done()) {
+        time_t time_diff = time(0) - start;
+        if (time_diff > HTTPS_TIMEOUT_SEC)
+            return -1;
+        schedule();
     }
 
     https_test_init(NULL);

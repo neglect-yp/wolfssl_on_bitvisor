@@ -151,15 +151,6 @@ void https_test_init(void *arg)
         return;
     }
 
-    time_t start = time(0);
-    while (!connected) {
-        time_t time_diff = time(0) - start;
-        printf("%d\n", time_diff);
-        if (time_diff > 5)
-            return;
-        schedule();
-    }
-    
     wolfSSL_SetIO_LwIP(ssl, https_client_pcb, NULL, NULL, NULL);
 
     if (wolfSSL_connect(ssl) != SSL_SUCCESS) {
@@ -196,4 +187,9 @@ void https_test_init(void *arg)
     wolfSSL_free(ssl);
     wolfSSL_CTX_free(ctx);
     wolfSSL_Cleanup();
+}
+
+int is_connect_done()
+{
+    return connected;
 }

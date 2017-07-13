@@ -15,5 +15,6 @@ struct arg {
 void tcp_client_init (void *arg);
 void tcp_client_close(void *arg);
 void https_test_init (void *arg);
+int is_connect_done();
 
 #endif
