@@ -206,6 +206,9 @@
     #define NO_FILESYSTEM
     #define NO_DEV_RANDOM
     #define NO_DH
+    #define IGNORE_NAME_CONSTRAINTS
+    #define NO_OCSP_OPTIONAL_CERTS
+    #define WOLFSSL_NO_TRUSTED_CERTS_VERIFY
 
     #define STRING_USER
     #include <core/string.h>

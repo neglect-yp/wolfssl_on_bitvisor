@@ -1680,30 +1680,22 @@ int wolfSSL_LwIP_Receive(WOLFSSL* ssl, char *buf, int sz, void *cb)
 
     time_t start = time(0);
     do {
-        if (time(0) - start > 10)
+        if (time(0) - start > 1)
             return WOLFSSL_CBIO_ERR_WANT_READ;
         schedule();
-    } while (!ssl->lwipCtx.pbuf/* || ssl->lwipCtx.pbuf->tot_len < sz*/);
+    } while (!ssl->lwipCtx.pbuf);
 
-    if (ssl->lwipCtx.pbuf) {
-        /*
-        if (ssl->lwipCtx.wait) {
-            ssl->lwipCtx.wait--;
-            return WOLFSSL_CBIO_ERR_WANT_READ;
-        }
-        */
-        DBG_PRINTF_CB("Received Len=%d, Want Len= %d\n",
+    start = time(0);
+    while (time(0) - start < 2)
+        schedule();
+
+    DBG_PRINTF_CB("Received Len=%d, Want Len= %d\n",
             ssl->lwipCtx.pbuf->tot_len, sz);
-        ret = wolfSSL_GetDataFromPbuf(buf, ssl, sz);
-        printf("wolfSSL_LwIP_Receive: ret=%d\n", ret);
-        if (ret == 0) {
-             ret = WOLFSSL_CBIO_ERR_WANT_READ;
-             ssl->lwipCtx.wait = 10;
-        }
-    } else {
-        DBG_PRINTF_CB("No Received Data\n");
-        ssl->lwipCtx.wait = 10;
+    ret = wolfSSL_GetDataFromPbuf(buf, ssl, sz);
+    printf("wolfSSL_LwIP_Receive: ret=%d\n", ret);
+    if (ret == 0) {
         ret = WOLFSSL_CBIO_ERR_WANT_READ;
+        ssl->lwipCtx.wait = 10;
     }
 
     return ret;

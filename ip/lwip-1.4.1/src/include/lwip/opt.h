@@ -953,7 +953,8 @@
  * an upper limit on the MSS advertised by the remote host.
  */
 #ifndef TCP_MSS
-#define TCP_MSS                         536
+//#define TCP_MSS                         536
+#define TCP_MSS                         4096
 #endif
 
 /**

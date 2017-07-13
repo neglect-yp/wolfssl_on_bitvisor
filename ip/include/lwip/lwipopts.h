@@ -42,7 +42,7 @@
 #define SYS_LIGHTWEIGHT_PROT            0
 #define NO_SYS                          1
 #define MEM_ALIGNMENT                   4 /* 4-byte alignment */
-#define MEM_SIZE                        (16*1024*1024) /* Heap size (16MB) */
+#define MEM_SIZE                        (32*1024*1024) /* Heap size (16MB) */
 
 /* --- DHCP --- */
 #define DHCP_DOES_ARP_CHECK             0 /* Don't Check Binded Addr */
