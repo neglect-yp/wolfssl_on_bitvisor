@@ -8,6 +8,9 @@ bins-$(CONFIG_VPN) += vpn
 asubdirs-1 += lib
 bins-$(CONFIG_IP) += echoctl
 bins-$(CONFIG_PCI_MONITOR) += monitor
+bins-1 += get_time
+bins-1 += wc_test
+bins-1 += thermal
 
 debug-objs = debug.o
 help-objs = help.o
@@ -27,3 +30,7 @@ vpn-objs = vpn.o
 vpn-libs = vpn/lib/$(outa) crypto/$(outa)
 echoctl-objs = echoctl.o
 monitor-objs = monitor.o
+get_time-objs = get_time.o
+wc_test-objs = wc_test.o
+thermal-objs = thermal.o
+

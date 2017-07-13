@@ -1020,6 +1020,10 @@ free (void *virt)
 	struct allocdata *p;
 	uint offset;
 
+    if (virt == NULL) {
+        return;
+    }
+
 	offset = (virt_t)virt & PAGESIZE_MASK;
 	if (offset == 0) {
 		mm_page_free (virt_to_page ((virt_t)virt));

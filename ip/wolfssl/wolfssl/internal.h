@@ -166,6 +166,9 @@
     #include <limits.h>
 #endif
 
+#ifdef HAVE_LWIP_NATIVE
+    #include "lwip/tcp.h"
+#endif
 
 #ifdef HAVE_LIBZ
     #include "zlib.h"
@@ -1503,6 +1506,12 @@ WOLFSSL_LOCAL int  SetCipherList(WOLFSSL_CTX*, Suites*, const char* list);
                    unsigned char* exportBuffer, unsigned int sz, void* userCtx);
 #endif
 
+#ifdef HAVE_LWIP_NATIVE
+    WOLFSSL_API   int wolfSSL_LwIP_Send(WOLFSSL* ssl, char *buf, int sz, void *cb);
+    WOLFSSL_API   int wolfSSL_LwIP_Receive(WOLFSSL* ssl, char *buf, int sz, void *cb);
+    WOLFSSL_API   int wolfSSL_SetIO_LwIP(WOLFSSL* ssl, void *pcb,
+                                tcp_recv_fn recv, tcp_sent_fn sent, void *arg);
+#endif /* HAVE_LWIP_NATIVE */
 
 /* wolfSSL Cipher type just points back to SSL */
 struct WOLFSSL_CIPHER {
@@ -2957,6 +2966,20 @@ typedef struct DtlsMsg {
 
 #endif
 
+#ifdef HAVE_LWIP_NATIVE
+    /* LwIP native TCP socket context */
+    typedef struct WOLF_LWIP_NATIVE_CTX {
+        struct tcp_pcb * pcb;
+        tcp_recv_fn recv_fn;
+        tcp_sent_fn sent_fn;
+        int    pulled;
+        struct pbuf *pbuf;
+        int    wait;
+        void * arg;   /* arg for application */
+        int    idle_count;
+    } WOLF_LWIP_NATIVE_CTX;
+#endif
+
 
 /* Handshake messages received from peer (plus change cipher */
 typedef struct MsgsReceived {
@@ -3222,6 +3245,9 @@ struct WOLFSSL {
 #endif
 #ifdef HAVE_NETX
     NetX_Ctx        nxCtx;             /* NetX IO Context */
+#endif
+#ifdef HAVE_LWIP_NATIVE
+    WOLF_LWIP_NATIVE_CTX      lwipCtx; /* LwIP native socket IO Context */
 #endif
 #ifdef SESSION_INDEX
     int sessionIndex;                  /* Session's location in the cache. */

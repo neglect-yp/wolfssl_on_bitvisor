@@ -199,19 +199,41 @@
 #endif
 
 #ifdef BITVISOR
-    #define WOLFSSL_LWIP
+    #define HAVE_LWIP_NATIVE
     #define NO_WRITEV
     #define SINGLE_THREADED
     #define WOLFSSL_USER_IO
     #define NO_FILESYSTEM
     #define NO_DEV_RANDOM
-    #define STRING_USER
+    #define NO_DH
 
+    #define STRING_USER
     #include <core/string.h>
-    #define XMEMCPY(d,s,l) memcpy((d),(s),(l)) 
-    #define XMEMSET(b,c,l)    memset((b),(c),(l))
-    #define XMEMCMP(s1,s2,n)  memcmp((s1),(s2),(n))
-    #define XSTRLEN(s1)       strlen((s1))
+    #include <my_string.h>
+    #define XMEMCPY(d,s,l)         my_memcpy((d),(s),(l)) 
+    #define XMEMSET(b,c,l)         memset((b),(c),(l))
+    #define XMEMCMP(s1,s2,n)       my_memcmp((s1),(s2),(n))
+    #define XMEMMOVE(d,s,l)        memmove((d),(s),(l))
+    #define XSTRLEN(s1)            my_strlen((s1))
+    #define XSTRNCPY(d,s,l)        strncpy((d),(s),(l))
+    #define XSTRNCMP(s1,s2,l)      strncmp((s1),(s2),(l))
+    #define XSTRNCASECMP(s1,s2,l)  strncasecmp((s1),(s2),(l))
+    #define XSTRSTR(h,n)           strstr((h),(n))
+    #define XSTRNSTR(s1,s2,l)      strnstr((s1),(s2),(l))
+
+    #define USER_TIME
+    #include <bios_time.h>
+    #define XTIME(t)               time(t)
+
+    #define XMALLOC_OVERRIDE
+    #include <core/mm.h>
+    #define XMALLOC(s,h,t)         alloc(s)
+    #define XFREE(p,h,t)           free(p)
+    #define XREALLOC(p,s,h,t)      realloc(p,s)
+
+    // avoid conflict
+    #define SetLength(l,o)         wc_SetLength(l,o)
+    #define GetLength(in,idx,l,m)  wc_GetLength(in,idx,l,m)
 
     #define NULL ((void *)0)
     typedef unsigned long int size_t;

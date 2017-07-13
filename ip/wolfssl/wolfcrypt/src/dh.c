@@ -45,7 +45,9 @@
     #define XPOW(x,y) pow((x),(y))
     #define XLOG(x)   log((x))
 #else
-    /* user's own math lib */
+    #include <math.h>
+    #define XPOW(x,y) pow((x),(y))
+    #define XLOG(x)   log((x))
 #endif
 
 #ifdef HAVE_FFDHE_2048

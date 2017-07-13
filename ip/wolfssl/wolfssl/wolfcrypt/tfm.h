@@ -107,6 +107,11 @@
    #undef FP_64BIT
 #endif
 
+#ifdef BITVISOR
+    #undef FP_64BIT
+    #undef TFM_X86_64
+#endif
+
 /* multi asms? */
 #ifdef TFM_X86
    #define TFM_ASM

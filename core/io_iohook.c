@@ -35,6 +35,7 @@
 #include "io_iohook.h"
 #include "panic.h"
 #include "printf.h"
+#include "vga.h"
 
 #ifdef DEBUG_IO_MONITOR
 static enum ioact

@@ -1672,15 +1672,23 @@ int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
     #define USE_TEST_GENSEED
 
 #elif defined(NO_DEV_RANDOM)
+    #include <bios_time.h>
+    #include "../core/asm.h"
 
-    #error "you need to write an os specific wc_GenerateSeed() here"
-
-    /*
+    //FIXME: weak seed
     int wc_GenerateSeed(OS_Seed* os, byte* output, word32 sz)
     {
+        word32 i;
+        for (i = 0; i < sz; i++ ) {
+            unsigned int a, d;
+            byte t;
+            asm_rdmsr32(0x19c, &a, &d);
+            byte thermal = (a & 0x003F0000) >> 16;
+            t = time(0) & 0xff;
+            output[i] = thermal ^ t ^ i;
+        }
         return 0;
     }
-    */
 
 #else
 

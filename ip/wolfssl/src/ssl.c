@@ -93,6 +93,10 @@
     #include <wolfssl/wolfcrypt/dh.h>
 #endif
 
+#ifdef BITVISOR
+#include <core/printf.h>
+int errno;
+#endif
 
 #ifndef WOLFSSL_LEANPSK
 char* mystrnstr(const char* s1, const char* s2, unsigned int n)
@@ -355,17 +359,25 @@ WOLFSSL* wolfSSL_new(WOLFSSL_CTX* ctx)
 
     (void)ret;
     WOLFSSL_ENTER("SSL_new");
+    printf("wolfSSL_new\n");
 
-    if (ctx == NULL)
+    if (ctx == NULL) {
+        printf("wolfSSL_new: ctx is NULL\n");
         return ssl;
+    }
 
     ssl = (WOLFSSL*) XMALLOC(sizeof(WOLFSSL), ctx->heap, DYNAMIC_TYPE_SSL);
-    if (ssl)
+    if (ssl) {
         if ( (ret = InitSSL(ssl, ctx, 0)) < 0) {
+            printf("wolfSSL_new: initSSL failed\n");
             FreeSSL(ssl, ctx->heap);
             ssl = 0;
         }
+    } else {
+        printf("malloc failed");
+    }
 
+    printf("wolfSSL_new: finish\n");
     WOLFSSL_LEAVE("SSL_new", ret);
     return ssl;
 }
@@ -3596,6 +3608,7 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
     DerBuffer*   der = *pDer;
 
     WOLFSSL_MSG("Adding a CA");
+    printf("Adding a CA\n");
 
 #ifdef WOLFSSL_SMALL_STACK
     cert = (DecodedCert*)XMALLOC(sizeof(DecodedCert), NULL,
@@ -3604,9 +3617,11 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
         return MEMORY_E;
 #endif
 
+    printf("\tParsing new CA\n");
     InitDecodedCert(cert, der->buffer, der->length, cm->heap);
     ret = ParseCert(cert, CA_TYPE, verify, cm);
     WOLFSSL_MSG("\tParsed new CA");
+    printf("\tParsed new CA\n");
 
 #ifndef NO_SKID
     subjectHash = cert->extSubjKeyId;
@@ -3684,8 +3699,10 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
             XMEMCPY(signer->subjectKeyIdHash, cert->extSubjKeyId,
                     SIGNER_DIGEST_SIZE);
         #endif
+            printf("\tmemcpy: start\n");
             XMEMCPY(signer->subjectNameHash, cert->subjectHash,
                     SIGNER_DIGEST_SIZE);
+            printf("\tmemcpy: stop\n");
             signer->keyUsage = cert->extKeyUsageSet ? cert->extKeyUsage
                                                     : 0xFFFF;
             signer->next    = NULL; /* If Key Usage not set, all uses valid. */
@@ -3702,10 +3719,13 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
             row = HashSigner(signer->subjectNameHash);
         #endif
 
+            printf("\tlock start\n");
             if (wc_LockMutex(&cm->caLock) == 0) {
                 signer->next = cm->caTable[row];
                 cm->caTable[row] = signer;   /* takes ownership */
+                printf("\tunlock start\n");
                 wc_UnLockMutex(&cm->caLock);
+                printf("\tunlock stop\n");
                 if (cm->caCacheCallback)
                     cm->caCacheCallback(der->buffer, (int)der->length, type);
             }
@@ -3718,12 +3738,16 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
     }
 
     WOLFSSL_MSG("\tFreeing Parsed CA");
+    printf("\tFreeDecodedCert: start\n");
     FreeDecodedCert(cert);
+    printf("\tFreeDecodedCert: stop\n");
 #ifdef WOLFSSL_SMALL_STACK
     XFREE(cert, NULL, DYNAMIC_TYPE_TMP_BUFFER);
 #endif
     WOLFSSL_MSG("\tFreeing der CA");
+    printf("\tFreeDer: start\n");
     FreeDer(pDer);
+    printf("\tFreeDer: stop\n");
     WOLFSSL_MSG("\t\tOK Freeing der CA");
 
     WOLFSSL_LEAVE("AddCA", ret);
@@ -4405,29 +4429,39 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff,
         return MEMORY_E;
 #endif
 
+    printf("memset: start\n");
     XMEMSET(info, 0, sizeof(EncryptedInfo));
+    printf("memset: stop\n");
     info->set      = 0;
     info->ctx      = ctx;
     info->consumed = 0;
 
     if (format == SSL_FILETYPE_PEM) {
+        printf("PemToDer: start\n");
         ret = PemToDer(buff, sz, type, &der, heap, info, &eccKey);
+        printf("PemToDer: stop\n");
     }
     else {  /* ASN1 (DER) or RAW (NTRU) */
         int length = (int)sz;
         if (format == SSL_FILETYPE_ASN1) {
             /* get length of der (read sequence) */
             word32 inOutIdx = 0;
+            printf("GetSequence: start\n");
             if (GetSequence(buff, &inOutIdx, &length, (word32)sz) < 0) {
                 ret = ASN_PARSE_E;
             }
+            printf("GetSequence: stop\n");
             length += inOutIdx; /* include leading squence */
         }
         info->consumed = length;
         if (ret == 0) {
+            printf("AllocDer: start\n");
             ret = AllocDer(&der, (word32)length, type, heap);
+            printf("AllocDer: stop\n");
             if (ret == 0) {
+                printf("memcpy: start\n");
                 XMEMCPY(der->buffer, buff, length);
+                printf("memcpy: stop\n");
             }
         }
     }
@@ -4448,7 +4482,9 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff,
     #ifdef WOLFSSL_SMALL_STACK
         XFREE(info, heap, DYNAMIC_TYPE_TMP_BUFFER);
     #endif
+        printf("FreeDer: start\n");
         FreeDer(&der);
+        printf("FreeDer: stop\n");
         return ret;
     }
 
@@ -4500,6 +4536,7 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff,
 #endif
 
     /* Handle DER owner */
+    printf("Handle DER owner\n");
     if (type == CA_TYPE) {
         if (ctx == NULL) {
             WOLFSSL_MSG("Need context for CA load");
@@ -4507,7 +4544,10 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff,
             return BAD_FUNC_ARG;
         }
         /* verify CA unless user set to no verify */
-        return AddCA(ctx->cm, &der, WOLFSSL_USER_CA, !ctx->verifyNone);
+        printf("AddCA: start\n");
+        ret = AddCA(ctx->cm, &der, WOLFSSL_USER_CA, !ctx->verifyNone);
+        printf("AddCA: stop\n");
+        return ret;
     }
 #ifdef WOLFSSL_TRUST_PEER_CERT
     else if (type == TRUSTED_PEER_TYPE) {
@@ -4523,7 +4563,7 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff,
     else if (type == CERT_TYPE) {
         if (ssl) {
              /* Make sure previous is free'd */
-            if (ssl->buffers.weOwnCert) {
+            if (ssl->buffers.weOwnCert) { 
                 FreeDer(&ssl->buffers.certificate);
                 #ifdef KEEP_OUR_CERT
                     FreeX509(ssl->ourCert);
@@ -8083,6 +8123,7 @@ int wolfSSL_DTLS_SetCookieSecret(WOLFSSL* ssl,
         int neededState;
 
         WOLFSSL_ENTER("SSL_connect()");
+        printf("wolfSSL_connect\n");
 
         #ifdef HAVE_ERRNO_H
             errno = 0;
@@ -8092,6 +8133,7 @@ int wolfSSL_DTLS_SetCookieSecret(WOLFSSL* ssl,
             return BAD_FUNC_ARG;
 
         if (ssl->options.side != WOLFSSL_CLIENT_END) {
+            printf("wolfSSL_connect: side error\n");
             WOLFSSL_ERROR(ssl->error = SIDE_ERROR);
             return SSL_FATAL_ERROR;
         }
@@ -8121,6 +8163,7 @@ int wolfSSL_DTLS_SetCookieSecret(WOLFSSL* ssl,
             }
             else {
                 WOLFSSL_ERROR(ssl->error);
+                printf("wolfSSL_connect: SendBuffered error\n");
                 return SSL_FATAL_ERROR;
             }
         }
@@ -8130,6 +8173,7 @@ int wolfSSL_DTLS_SetCookieSecret(WOLFSSL* ssl,
         case CONNECT_BEGIN :
             /* always send client hello first */
             if ( (ssl->error = SendClientHello(ssl)) != 0) {
+                printf("wolfSSL_connect: SendClientHello error\n");
                 WOLFSSL_ERROR(ssl->error);
                 return SSL_FATAL_ERROR;
             }
@@ -8140,27 +8184,36 @@ int wolfSSL_DTLS_SetCookieSecret(WOLFSSL* ssl,
         case CLIENT_HELLO_SENT :
             neededState = ssl->options.resuming ? SERVER_FINISHED_COMPLETE :
                                           SERVER_HELLODONE_COMPLETE;
+            printf("needed state: %d\n", neededState);
             #ifdef WOLFSSL_DTLS
                 /* In DTLS, when resuming, we can go straight to FINISHED,
                  * or do a cookie exchange and then skip to FINISHED, assume
                  * we need the cookie exchange first. */
                 if (IsDtlsNotSctpMode(ssl))
                     neededState = SERVER_HELLOVERIFYREQUEST_COMPLETE;
+            printf("needed state: %d\n", neededState);
             #endif
             /* get response */
             while (ssl->options.serverState < neededState) {
+                printf("serverState: %d, neededState: %d\n",
+                        ssl->options.serverState, neededState);
                 if ( (ssl->error = ProcessReply(ssl)) < 0) {
+                    printf("error: %d\n", ssl->error);
                     WOLFSSL_ERROR(ssl->error);
                     return SSL_FATAL_ERROR;
                 }
                 /* if resumption failed, reset needed state */
                 else if (neededState == SERVER_FINISHED_COMPLETE)
                     if (!ssl->options.resuming) {
+                        printf("[reset] serverState: %d, neededState: %d\n",
+                                ssl->options.serverState, neededState);
                         if (!IsDtlsNotSctpMode(ssl))
                             neededState = SERVER_HELLODONE_COMPLETE;
                         else
                             neededState = SERVER_HELLOVERIFYREQUEST_COMPLETE;
                     }
+                printf("serverState: %d, neededState: %d\n",
+                        ssl->options.serverState, neededState);
             }
 
             ssl->options.connectState = HELLO_AGAIN;

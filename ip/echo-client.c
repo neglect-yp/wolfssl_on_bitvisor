@@ -6,7 +6,7 @@ static ip_addr_t destip;
 static int destport;
 static struct tcp_pcb *echo_client_pcb;
 
-#if 0				/* debug? */
+#if 1				/* debug? */
 #define printd(X...) do { printf (X); } while (0)
 #else
 #define printd(X...)

@@ -3146,14 +3146,21 @@ void FreeNameSubtrees(Base_entry* names, void* heap)
 
 #endif /* IGNORE_NAME_CONSTRAINTS */
 
+#include <core/printf.h>
 void FreeDecodedCert(DecodedCert* cert)
 {
+    printf("FreeDecodedCert\n");
+    printf("cert->subjectCNStored = %d\n", cert->subjectCNStored);
+    printf("cert->subjectCN = %08x\n", cert->subjectCN);
     if (cert->subjectCNStored == 1)
         XFREE(cert->subjectCN, cert->heap, DYNAMIC_TYPE_SUBJECT_CN);
+    printf("cert->pubKeyStored = %d\n", cert->pubKeyStored);
     if (cert->pubKeyStored == 1)
         XFREE(cert->publicKey, cert->heap, DYNAMIC_TYPE_PUBLIC_KEY);
+    printf("cert->weOwnAltNames = %08x\n", cert->weOwnAltNames);
     if (cert->weOwnAltNames && cert->altNames)
         FreeAltNames(cert->altNames, cert->heap);
+    printf("aaaaa\n");
 #ifndef IGNORE_NAME_CONSTRAINTS
     if (cert->altEmailNames)
         FreeAltNames(cert->altEmailNames, cert->heap);
@@ -3173,7 +3180,9 @@ void FreeDecodedCert(DecodedCert* cert)
     if (cert->subjectName.fullName != NULL)
         XFREE(cert->subjectName.fullName, cert->heap, DYNAMIC_TYPE_X509);
 #endif /* OPENSSL_EXTRA */
+    printf("FreeSignatureCtx: start\n");
     FreeSignatureCtx(&cert->sigCtx);
+    printf("FreeSignatureCtx: stop\n");
 }
 
 static int GetCertHeader(DecodedCert* cert)

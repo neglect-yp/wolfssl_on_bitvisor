@@ -117,6 +117,8 @@ void wolfSSL_Debugging_OFF(void)
     #else
         #include <nio.h>
     #endif
+#elif defined(BITVISOR)
+    #include <core/printf.h>
 #else
     #include <stdio.h>   /* for default printf stuff */
 #endif
@@ -146,6 +148,8 @@ static void wolfssl_log(const int logLevel, const char *const logMessage)
 #elif defined(WOLFSSL_UTASKER)
             fnDebugMsg((char*)logMessage);
             fnDebugMsg("\r\n");
+#elif defined(BITVISOR)
+            printf("%s\n", logMessage);
 #else
             fprintf(stderr, "%s\n", logMessage);
 #endif

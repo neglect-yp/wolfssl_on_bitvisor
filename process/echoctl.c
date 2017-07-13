@@ -57,10 +57,7 @@ usage (char *hoge)
 		"usage:\n"
 		"  client connect <ipaddr> <port>  Connect to echo server.\n"
 		"  client send                     Send a message to client.\n"
-		"  server start <port>             Start echo server.\n"
-		"  client sslconnect <ipaddr> <port>  Connect to echo server.\n"
-		"  client sslsend                     Send a message to client.\n"
-		"  server sslstart <port>             Start echo server.\n");
+		"  server start <port>             Start echo server.\n");
 }
 
 static int
@@ -88,7 +85,7 @@ action (int d, int argc, char **argv)
 		return -1;
 	}
 	if (!strcmp (argv[1], "client")) {
-		if (!strcmp (argv[2], "connect") || !strcmp (argv[2], "sslconnect")) {
+		if (!strcmp (argv[2], "connect")) {
 			if (argc != 5) {
 				usage (argv[0]);
 				return -1;
@@ -103,36 +100,27 @@ action (int d, int argc, char **argv)
 				" %d.%d.%d.%d:%d (%08x)\n", ipaddr_a[0],
 				ipaddr_a[1], ipaddr_a[2], ipaddr_a[3], port,
 				ipaddr);
-			if (!strcmp (argv[2], "connect"))
-				cmd = 0;
-			else
-				cmd = 3;
-		} else if (!strcmp (argv[2], "send") || !strcmp (argv[2], "sslsend")) {
+            cmd = 0;
+		} else if (!strcmp (argv[2], "send")) {
 			if (argc != 3) {
 				usage (argv[0]);
 				return -1;
 			}
 			printf ("Sending a message...\n");
-			if (!strcmp (argv[2], "send"))
-				cmd = 1;
-			else
-				cmd = 4;
+            cmd = 1;
 		} else {
 			usage (argv[0]);
 			return -1;
 		}
 	} else if (!strcmp (argv[1], "server")) {
-		if (!strcmp (argv[2], "start") || !strcmp (argv[2], "sslstart")) {
+		if (!strcmp (argv[2], "start")) {
 			if (argc != 4) {
 				usage (argv[0]);
 				return -1;
 			}
 			port = (int)strtol (argv[3], NULL, 0);
 			printf ("Starting server (Port:%d)...\n", port);
-			if (!strcmp (argv[2], "sslsend"))
-				cmd = 2;
-			else
-				cmd = 5;
+            cmd = 2;
 		} else {
 			usage (argv[0]);
 			return -1;

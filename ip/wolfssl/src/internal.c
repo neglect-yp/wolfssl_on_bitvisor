@@ -4073,8 +4073,10 @@ int InitSSL(WOLFSSL* ssl, WOLFSSL_CTX* ctx, int writeDup)
 
     /* Initialize SSL with the appropriate fields from it's ctx */
     /* requires valid arrays and suites unless writeDup ing */
-    if ((ret =  SetSSL_CTX(ssl, ctx, writeDup)) != SSL_SUCCESS)
+    if ((ret =  SetSSL_CTX(ssl, ctx, writeDup)) != SSL_SUCCESS) {
+        printf("InitSSL: SetSSL_CTX failed ret=%d\n", ret);
         return ret;
+    }
 
     ssl->options.dtls = ssl->version.major == DTLS_MAJOR;
 
@@ -4095,11 +4097,13 @@ int InitSSL(WOLFSSL* ssl, WOLFSSL_CTX* ctx, int writeDup)
         /* FIPS RNG API does not accept a heap hint */
 #ifndef HAVE_FIPS
         if ( (ret = wc_InitRng_ex(ssl->rng, ssl->heap, ssl->devId)) != 0) {
+            printf("InitSSL: wc_InitRng_ex failed ret=%d\n", ret);
             WOLFSSL_MSG("RNG Init error");
             return ret;
         }
 #else
         if ( (ret = wc_InitRng(ssl->rng)) != 0) {
+            printf("InitSSL: wc_InitRng failed ret=%d\n", ret);
             WOLFSSL_MSG("RNG Init error");
             return ret;
         }
@@ -4113,14 +4117,17 @@ int InitSSL(WOLFSSL* ssl, WOLFSSL_CTX* ctx, int writeDup)
 
     /* hsHashes */
     ret = InitHandshakeHashes(ssl);
-    if (ret != 0)
+    if (ret != 0) {
+        printf("InitSSL: InitHandshakeHashes failed ret=%d\n", ret);
         return ret;
+    }
 
 #if defined(WOLFSSL_DTLS) && !defined(NO_WOLFSSL_SERVER)
     if (ssl->options.dtls && ssl->options.side == WOLFSSL_SERVER_END) {
         ret = wolfSSL_DTLS_SetCookieSecret(ssl, NULL, 0);
         if (ret != 0) {
             WOLFSSL_MSG("DTLS Cookie Secret error");
+            printf("InitSSL: wolfSSL_DTLS_SetCookieSecret failed ret=%d\n", ret);
             return ret;
         }
     }
@@ -5262,7 +5269,7 @@ ProtocolVersion MakeDTLSv1_2(void)
     }
 #endif
 
-#elif defined(TIME_OVERRIDES)
+#elif defined(TIME_OVERRIDES) || defined(USER_TIME)
 
     /* use same asn time overrides unless user wants tick override above */
 
@@ -6124,6 +6131,8 @@ static int GetHandShakeHeader(WOLFSSL* ssl, const byte* input, word32* inOutIdx,
 
     *type = ptr[0];
     c24to32(&ptr[1], size);
+    
+    printf("type = %02x, size = %08x\n", *type, *size);
 
     return 0;
 }
@@ -9116,7 +9125,7 @@ static int DoHandShakeMsg(WOLFSSL* ssl, byte* input, word32* inOutIdx,
         byte   type;
         word32 size;
 
-        if (GetHandShakeHeader(ssl,input, inOutIdx, &type, &size, totalSz) != 0)
+        if (GetHandShakeHeader(ssl, input, inOutIdx, &type, &size, totalSz) != 0)
             return PARSE_ERROR;
 
         /* Cap the maximum size of a handshake message to something reasonable.
@@ -10770,6 +10779,7 @@ static int GetInputData(WOLFSSL *ssl, word32 size)
                      ssl->buffers.inputBuffer.buffer +
                      ssl->buffers.inputBuffer.length,
                      inSz);
+        printf("in = %d\n", in);
         if (in == -1)
             return SOCKET_ERROR_E;
 
@@ -10781,6 +10791,8 @@ static int GetInputData(WOLFSSL *ssl, word32 size)
 
         ssl->buffers.inputBuffer.length += in;
         inSz -= in;
+        printf("ssl->buffers.inputBuffer.length = %d, size = %d\n",
+                ssl->buffers.inputBuffer.length, size);
 
     } while (ssl->buffers.inputBuffer.length < size);
 
@@ -10889,11 +10901,13 @@ int ProcessReply(WOLFSSL* ssl)
     }
 
     for (;;) {
+        printf("ssl->options.processReply: %d\n", ssl->options.processReply);
         switch (ssl->options.processReply) {
 
         /* in the WOLFSSL_SERVER case, get the first byte for detecting
          * old client hello */
         case doProcessInit:
+            printf("doProcessInit\n");
 
             readSz = RECORD_HEADER_SZ;
 
@@ -10990,10 +11004,12 @@ int ProcessReply(WOLFSSL* ssl)
             }
 
 #endif  /* OLD_HELLO_ALLOWED */
+            printf("ssl->options.processReply: %d\n", ssl->options.processReply);
             FALL_THROUGH;
 
         /* get the record layer header */
         case getRecordLayerHeader:
+            printf("getRecoredLayerHeader\n");
 
             ret = GetRecordHeader(ssl, ssl->buffers.inputBuffer.buffer,
                                        &ssl->buffers.inputBuffer.idx,
@@ -11022,6 +11038,7 @@ int ProcessReply(WOLFSSL* ssl)
 
         /* retrieve record layer data */
         case getData:
+            printf("getData\n");
 
             /* get sz bytes or return error */
             if (!ssl->options.dtls) {
@@ -11044,6 +11061,7 @@ int ProcessReply(WOLFSSL* ssl)
 
         /* decrypt message */
         case decryptMessage:
+            printf("decryptMessage\n");
 
             if (IsEncryptionOn(ssl, 0) && ssl->keys.decryptedCur == 0) {
                 bufferStatic* in = &ssl->buffers.inputBuffer;
@@ -11115,6 +11133,7 @@ int ProcessReply(WOLFSSL* ssl)
 
         /* verify digest of message */
         case verifyMessage:
+            printf("verifyMessage\n");
 
             if (IsEncryptionOn(ssl, 0) && ssl->keys.decryptedCur == 0) {
                 if (!atomicUser) {
@@ -11150,6 +11169,7 @@ int ProcessReply(WOLFSSL* ssl)
 
         /* the record layer is here */
         case runProcessingOneMessage:
+            printf("runProcessingOneMessage\n");
 
         #ifdef WOLFSSL_DTLS
             if (IsDtlsNotSctpMode(ssl)) {
@@ -11159,6 +11179,7 @@ int ProcessReply(WOLFSSL* ssl)
 
             WOLFSSL_MSG("received record layer msg");
 
+            printf("ssl->curRL.type: %d\n", ssl->curRL.type);
             switch (ssl->curRL.type) {
                 case handshake :
                     /* debugging in DoHandShakeMsg */

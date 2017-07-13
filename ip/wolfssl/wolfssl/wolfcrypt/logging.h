@@ -83,11 +83,12 @@ WOLFSSL_API int wolfSSL_SetLoggingCb(wolfSSL_Logging_cb log_function);
 
 #else /* DEBUG_WOLFSSL   */
 
+    #include <core/printf.h>
     #define WOLFSSL_ENTER(m)
     #define WOLFSSL_LEAVE(m, r)
     #define WOLFSSL_STUB(m)
 
-    #define WOLFSSL_MSG(m)
+    #define WOLFSSL_MSG(m) printf(m"\n")
     #define WOLFSSL_BUFFER(b, l)
 
 #endif /* DEBUG_WOLFSSL  */

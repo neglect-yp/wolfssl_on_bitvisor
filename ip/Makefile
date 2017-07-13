@@ -41,8 +41,13 @@ objs-1 += lwip-$(LWIP_VERSION)/src/api/tcpip.o
 objs-1 += ip_sys.o arch/sys_arch.o
 objs-1 += ip_main.o net_main.o
 objs-1 += echo-server.o echo-client.o echoctl.o
+objs-1 += bios_time.o
+objs-1 += ctype.o
+objs-1 += my_string.o
+objs-1 += get_time.o
+objs-1 += thermal.o
 
-CFLAGS += -I$(DIR)/wolfssl -DBITVISOR -DBUILDING_WOLFSSL -DECC_SHAMIR -DECC_TIMING_RESISTANT -DHAVE_AESGCM -DHAVE_CHACHA -DHAVE_CONFIG_H -DHAVE_ECC -DHAVE_EXTENDED_MASTER -DHAVE_HASHDRBG -DHAVE_ONE_TIME_AUTH -DHAVE_POLY1305 -DHAVE_SUPPORTED_CURVES -DHAVE_THREAD_LS -DHAVE_TLS_EXTENSIONS -DHAVE___UINT128_T -DNDEBUG -DNO_DES3 -DNO_DSA -DNO_HC128 -DNO_MD4 -DNO_PSK -DNO_PWDBASED -DNO_RABBIT -DNO_RC4 -DPIC -DTFM_ECC256 -DTFM_TIMING_RESISTANT -DUSE_FAST_MATH -DWC_NO_ASYNC_THREADING -DWC_RSA_BLINDING -DWOLFSSL_BASE64_ENCODE -DWOLFSSL_SHA224 -DWOLFSSL_SHA3 -DWOLFSSL_SHA384 -DWOLFSSL_SHA512 -DWOLFSSL_X86_64_BUILD -DNO_WOLFSSL_DIR
+CFLAGS += -I$(DIR)/wolfssl -DBITVISOR -DBUILDING_WOLFSSL -DECC_SHAMIR -DECC_TIMING_RESISTANT -DHAVE_AESGCM -DHAVE_CHACHA -DHAVE_CONFIG_H -DHAVE_ECC -DHAVE_EXTENDED_MASTER -DHAVE_HASHDRBG -DHAVE_ONE_TIME_AUTH -DHAVE_POLY1305 -DHAVE_SUPPORTED_CURVES -DHAVE_THREAD_LS -DHAVE_TLS_EXTENSIONS -DNDEBUG -DNO_DES3 -DNO_DSA -DNO_HC128 -DNO_MD4 -DNO_PSK -DNO_PWDBASED -DNO_RABBIT -DNO_RC4 -DPIC -DTFM_ECC256 -DWC_NO_ASYNC_THREADING -DWC_RSA_BLINDING -DWOLFSSL_BASE64_ENCODE -DWOLFSSL_SHA224 -DWOLFSSL_SHA3 -DWOLFSSL_SHA384 -DWOLFSSL_SHA512 -DWOLFSSL_X86_64_BUILD -DNO_WOLFSSL_DIR -DUSE_FAST_MATH -DTFM_TIMING_RESISTANT -DWOLFSSL_TRUST_PEER_CERT
 
 objs-1 += wolfssl/wolfcrypt/src/hmac.o
 objs-1 += wolfssl/wolfcrypt/src/hash.o
@@ -60,7 +65,7 @@ objs-1 += wolfssl/wolfcrypt/src/error.o
 objs-1 += wolfssl/wolfcrypt/src/signature.o
 objs-1 += wolfssl/wolfcrypt/src/wolfmath.o
 objs-1 += wolfssl/wolfcrypt/src/memory.o
-objs-1 += wolfssl/wolfcrypt/src/dh.o
+# objs-1 += wolfssl/wolfcrypt/src/dh.o
 objs-1 += wolfssl/wolfcrypt/src/asn.o
 objs-1 += wolfssl/wolfcrypt/src/coding.o
 objs-1 += wolfssl/wolfcrypt/src/poly1305.o
@@ -75,5 +80,5 @@ objs-1 += wolfssl/src/keys.o
 objs-1 += wolfssl/src/ssl.o
 objs-1 += wolfssl/src/tls.o
 objs-1 += wolfssl/src/tls13.o
-# objs-1 += wolfssl/src/.libs/libwolfssl.so.12.0.0
 
+objs-1 += https_tcp.o https_test.o
