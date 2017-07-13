@@ -156,7 +156,7 @@ void https_test_init(void *arg)
         time_t time_diff = time(0) - start;
         printf("%d\n", time_diff);
         if (time_diff > 5)
-            break;
+            return;
         schedule();
     }
     
